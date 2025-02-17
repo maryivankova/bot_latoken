@@ -1,18 +1,42 @@
-# handlers.py
 from telegram import Update
 from telegram.ext import CommandHandler, MessageHandler, filters
 import json
 import httpx
 from openai import OpenAI
-from config import OPENAI_API_KEY
+from config import TOKEN, OPENAI_API_KEY
 from sentence_transformers import SentenceTransformer, util
+
+
 
 # Создаем клиент OpenAI
 proxy_url = "http://189.240.60.171:9090"  # Используем ваш рабочий прокси
 client = OpenAI(
     api_key=OPENAI_API_KEY,
-    http_client=httpx.Client(proxy=proxy_url))  # Используем параметр `proxy`
+    http_client=httpx.Client(proxy=proxy_url))  # Используем параметр proxy
 
+
+
+assistant = client.beta.assistants.create(
+    name="LATOKEN Assistant",
+    instructions="Вы помогающий ассистент, который отвечает на вопросы о LATOKEN, хакатоне и Culture Deck.",
+    model="gpt-4",
+    tools=[]  # Пустой список, если функции не нужны
+)
+
+# Получение ID ассистента
+ASSISTANT_ID = assistant.id
+
+# Функция для взаимодействия с ассистентом
+def ask_assistant(user_input):
+    response = client.beta.assistants.create_and_run(
+        assistant_id=ASSISTANT_ID,
+        thread={
+            "messages": [
+                {"role": "user", "content": user_input}
+            ]
+        }
+    )
+    return response.choices[0].message.content
 
 # Загрузка модели для векторного поиска
 model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -84,11 +108,21 @@ def ask_gpt4(prompt):
     )
     return response.choices[0].message.content
 
+
+
+# Список вопросов для тестирования
+TEST_QUESTIONS = [
+
+    "Почему Латокен помогает людям изучать и покупать активы?",
+    "Зачем нужен Sugar Cookie тест?",
+    "Зачем нужен Wartime СЕО?",
+    "В каких случаях стресс полезен и в каких вреден?"
+]
+
 # Обработка команды /start
 async def start(update: Update, context) -> None:
     await update.message.reply_text('Привет! Я ваш Telegram-бот. Чем могу помочь?')
 
-# Обработка команды /help
 async def help_command(update: Update, context) -> None:
     await update.message.reply_text(
         'Я могу ответить на ваши вопросы о LATOKEN и хакатоне. Просто напишите мне что-нибудь.')
@@ -115,6 +149,19 @@ async def handle_message(update: Update, context) -> None:
 
     # Отправляем ответ пользователю
     await update.message.reply_text(response)
+
+    # Задаем вопрос из теста
+    if TEST_QUESTIONS:
+        test_question = TEST_QUESTIONS.pop(0)
+        await update.message.reply_text(f"Теперь вопрос для вас: {test_question}")
+    if not TEST_QUESTIONS:
+        await update.message.reply_text("Вы ответили на все вопросы. Спасибо за участие!")
+
+def evaluate_user_answer(user_answer, correct_answer):
+    if user_answer.lower() == correct_answer.lower():
+        return "Верно! Вы хорошо разбираетесь в теме."
+    else:
+        return f"Почти правильно, но давайте уточним: {correct_answer}"
 
 # Регистрация обработчиков
 def register_handlers(application):

@@ -11,6 +11,28 @@
     "registration": "Регистрация доступна на официальном сайте LATOKEN."
   },
   "prizes": "Призовой фонд включает денежные призы, токены и возможность сотрудничества с LATOKEN.",
+  "schedule": {
+    "Friday": [
+      {
+        "time": "18:00",
+        "activity": "Презентация компании и обсуждение задачи."
+      }
+    ],
+    "Saturday": [
+      {
+        "time": "17:00",
+        "activity": "Чекпоинт."
+      },
+      {
+        "time": "18:00",
+        "activity": "Демо результатов."
+      },
+      {
+        "time": "19:00",
+        "activity": "Объявление победителей, интервью и офферы."
+      }
+    ]
+  },
   "contact": {
     "email": "hackathon@latoken.com",
     "website": "https://deliver.latoken.com/hackathon"
